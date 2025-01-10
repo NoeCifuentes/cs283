@@ -15,7 +15,7 @@ I have installed my virtual machine, tested it, feel comfortable using it, and v
 - [ ] NO - Not Yet
 
 ## Repository Link
-[My Repository](https://github.com/NoeCifuentes/cs283)
+https://github.com/NoeCifuentes/cs283
 
 ## Goals for the Class
 I want to improve my understanding of low-level systems programming, become a more comftorable C programmer, and learn Linux environments.
