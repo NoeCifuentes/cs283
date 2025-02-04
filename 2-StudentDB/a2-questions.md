@@ -3,9 +3,9 @@
 #### Directions
 Please answer the following questions and submit in your repo for the second assignment.  Please keep the answers as short and concise as possible.
 
-1. In this assignment I asked you provide an implementation for the `get_student(...)` function because I think it improves the overall design of the database application.   After you implemented your solution do you agree that externalizing `get_student(...)` into it's own function is a good design strategy?  Briefly describe why or why not.
+1. In this assignment I asked you provide an implementation for the `get_student(...)` function because I think it improves the overall design of the database application.   After you implemented your solution do you agree that externalizing `get_student(...)` into its own function is a good design strategy?  Briefly describe why or why not.
 
-    > **Answer**:  _start here_
+    > **Answer:** Yes, externalizing `get_student(...)` into its own function is a good design strategy since it encapsulates the retrieval logic, which gives reusability and reduces redundancy. The approach simplifies maintenance and debugging, as the function can be independently tested and updated.
 
 2. Another interesting aspect of the `get_student(...)` function is how its function prototype requires the caller to provide the storage for the `student_t` structure:
 
@@ -39,7 +39,7 @@ Please answer the following questions and submit in your repo for the second ass
     ```
     Can you think of any reason why the above implementation would be a **very bad idea** using the C programming language?  Specifically, address why the above code introduces a subtle bug that could be hard to identify at runtime? 
 
-    > **ANSWER:** _start here_
+    > **Answer:** Returning a pointer to a local variable leads to undefined behavior because local variables are stored on the stack and their memory is reclaimed when the function exits. This results in a dangling pointer that references invalid memory, which can cause subtle and hard-to-diagnose bugs during runtime.
 
 3. Another way the `get_student(...)` function could be implemented is as follows:
 
@@ -70,12 +70,11 @@ Please answer the following questions and submit in your repo for the second ass
         }
     }
     ```
-    In this implementation the storage for the student record is allocated on the heap using `malloc()` and passed back to the caller when the function returns. What do you think about this alternative implementation of `get_student(...)`?  Address in your answer why it work work, but also think about any potential problems it could cause.  
+    In this implementation the storage for the student record is allocated on the heap using `malloc()` and passed back to the caller when the function returns. What do you think about this alternative implementation of `get_student(...)`?  Address in your answer why it would work, but also think about any potential problems it could cause.  
     
-    > **ANSWER:** _start here_  
+    > **Answer:** Dynamically allocating memory allows the function to safely return a pointer to the caller, but it introduces the risk of memory leaks if the caller forgets to free the allocated memory. also `malloc()` can fail returning `NULL` which needs error handling. Mismanagement of heap memory will lead to crashes.
 
-
-4. Lets take a look at how storage is managed for our simple database. Recall that all student records are stored on disk using the layout of the `student_t` structure (which has a size of 64 bytes).  Lets start with a fresh database by deleting the `student.db` file using the command `rm ./student.db`.  Now that we have an empty database lets add a few students and see what is happening under the covers.  Consider the following sequence of commands:
+4. Let's take a look at how storage is managed for our simple database. Recall that all student records are stored on disk using the layout of the `student_t` structure (which has a size of 64 bytes). Let's start with a fresh database by deleting the `student.db` file using the command `rm ./student.db`. Now that we have an empty database, let's add a few students and see what is happening under the covers. Consider the following sequence of commands:
 
     ```bash
     > ./sdbsc -a 1 john doe 345
@@ -98,17 +97,15 @@ Please answer the following questions and submit in your repo for the second ass
         -rw-r----- 1 bsm23 bsm23 4160 Jan 17 10:03 ./student.db
     ```
 
-    For this question I am asking you to perform some online research to investigate why there is a difference between the size of the file reported by the `ls` command and the actual storage used on the disk reported by the `du` command.  Understanding why this happens by design is important since all good systems programmers need to understand things like how linux creates sparse files, and how linux physically stores data on disk using fixed block sizes.  Some good google searches to get you started: _"lseek syscall holes and sparse files"_, and _"linux file system blocks"_.  After you do some research please answer the following:
+    - **Why was the file size reported by the `ls` command 128 bytes after adding student with ID=1, 256 after adding student with ID=3, and 4160 after adding the student with ID=64?**
 
-    - Please explain why the file size reported by the `ls` command was 128 bytes after adding student with ID=1, 256 after adding student with ID=3, and 4160 after adding the student with ID=64? 
+        > **Answer:** The `ls` command shows the logical file size, which includes all data and empty areas between records. Sparse files optimize storage by not allocating physical space for these gaps, leading to larger logical sizes.
 
-        > **ANSWER:** _start here_
+    - **Why did the total storage used on the disk remain unchanged when we added the student with ID=1, ID=3, and ID=63, but increased from 4K to 8K when we added the student with ID=64?** 
 
-    -   Why did the total storage used on the disk remain unchanged when we added the student with ID=1, ID=3, and ID=63, but increased from 4K to 8K when we added the student with ID=64? 
+        > **Answer:** Sparse files only allocate physical storage for actual data, leaving gaps unallocated. The disk usage remained 4K for earlier records, but adding ID=64 filled a large gap, requiring allocation of new blocks, which increased disk usage to 8K.
 
-        > **ANSWER:** _start here_
-
-    - Now lets add one more student with a large student ID number  and see what happens:
+    - **Why did adding a student with a large ID (99999) drastically increase the file size but not the disk usage?**
 
         ```bash
         > ./sdbsc -a 99999 big dude 205 
@@ -117,6 +114,6 @@ Please answer the following questions and submit in your repo for the second ass
         > du -h ./student.db
         12K     ./student.db
         ```
-        We see from above adding a student with a very large student ID (ID=99999) increased the file size to 6400000 as shown by `ls` but the raw storage only increased to 12K as reported by `du`.  Can provide some insight into why this happened?
 
-        > **ANSWER:**  _start here_
+        > **Answer:** The file size grew to 6.4 MB because of the large offset needed for the student with ID 99999, but sparse files do not allocate physical storage for the empty regions, keeping the actual disk usage minimal at 12K.
+
